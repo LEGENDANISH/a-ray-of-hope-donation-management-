@@ -1,0 +1,85 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Campaign {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  targetAmount Float?
+  status      CampaignStatus @default(ACTIVE)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  donations   Donation[]
+  expenses    Expense[]
+  
+  @@map("campaigns")
+}
+
+model Donor {
+  id          String   @id @default(cuid())
+  name        String
+  email       String?
+  phone       String?
+  address     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  donations   Donation[]
+  
+  @@map("donors")
+}
+
+model Beneficiary {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  contactInfo String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@map("beneficiaries")
+}
+
+model Donation {
+  id         String   @id @default(cuid())
+  amount     Float
+  donorId    String
+  campaignId String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  
+  donor      Donor     @relation(fields: [donorId], references: [id], onDelete: Cascade)
+  campaign   Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  
+  @@map("donations")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  category    String
+  campaignId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  campaign    Campaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  
+  @@map("expenses")
+}
+
+enum CampaignStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
